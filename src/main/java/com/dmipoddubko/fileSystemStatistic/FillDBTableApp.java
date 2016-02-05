@@ -9,11 +9,11 @@ public class FillDBTableApp {
         PropertyConfigurator.configure("log4j.properties");
         FillDBTable fillDBTable = new FillDBTable();
         try {
-            fillDBTable.conn();
-            fillDBTable.createTable();
-            fillDBTable.visitDir("C:\\Users\\dpoddubko\\Desktop\\testRecursion");
-            fillDBTable.readTable();
-            fillDBTable.CloseDB();
+            fillDBTable.connection();
+            fillDBTable.createTab();
+            fillDBTable.visitFolder("C:\\Users\\dpoddubko\\Desktop\\testRecursion");
+            fillDBTable.readTab();
+            fillDBTable.closeDB();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {

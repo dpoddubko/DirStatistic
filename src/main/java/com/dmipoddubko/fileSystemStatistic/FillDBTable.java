@@ -3,42 +3,39 @@ package com.dmipoddubko.fileSystemStatistic;
 import org.apache.log4j.Logger;
 
 import java.io.File;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class FillDBTable {
-    public java.sql.Connection connection;
-    public Statement stm;
-    public ResultSet set;
+    private Connection connection;
+    private Statement stm;
+
     private final static Logger LOG = Logger.getLogger(FillDBTable.class);
 
-    public void conn() throws ClassNotFoundException, SQLException {
-        connection = null;
+    public void connection() throws ClassNotFoundException, SQLException {
         Class.forName("org.sqlite.JDBC");
         connection = DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
-        LOG.info("База Подключена!");
+        LOG.info("The database is connected.");
     }
 
-    public void createTable() throws ClassNotFoundException, SQLException {
+    public void createTab() throws ClassNotFoundException, SQLException {
         stm = connection.createStatement();
         stm.execute("CREATE TABLE if not exists 'directory' " +
                 "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                 " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
-        LOG.info("Таблица создана или уже существует.");
+        LOG.info("The table was created or already exists.");
+        stm.close();
     }
 
-    public void insertDir(String dir, String path, String type, long size) throws SQLException {
+    public void insertIntoTab(String name, String path, String type, long size) throws SQLException {
         stm = connection.createStatement();
         stm.execute("INSERT INTO 'directory' ('name', 'path', 'type', 'size') " +
-                "VALUES ('" + dir + "','" + path + "','" + type + "','" + size + "'); ");
+                "VALUES ('" + name + "','" + path + "','" + type + "','" + size + "'); ");
+        stm.close();
     }
 
-    public void readTable() throws ClassNotFoundException, SQLException {
+    public void readTab() throws ClassNotFoundException, SQLException {
         stm = connection.createStatement();
-        set = stm.executeQuery("SELECT * FROM directory");
-
+        ResultSet set = stm.executeQuery("SELECT * FROM directory");
         while (set.next()) {
             int id = set.getInt("id");
             String name = set.getString("name");
@@ -51,47 +48,38 @@ public class FillDBTable {
             LOG.info("type = " + type);
             LOG.info("size = " + size + "\n");
         }
-
-        LOG.info("Данные таблицы распечатаны.");
+        LOG.info("The table printed.");
+        set.close();
+        stm.close();
     }
 
-    public void deleteTable() throws ClassNotFoundException, SQLException {
+    public void deleteTab() throws ClassNotFoundException, SQLException {
         stm = connection.createStatement();
-        stm = connection.createStatement();
-        String query = "DELETE FROM directory";
-        int deletedRows = stm.executeUpdate(query);
+        int deletedRows = stm.executeUpdate("DELETE FROM directory");
         if (deletedRows > 0) {
-            LOG.info("Таблица очищена.");
+            LOG.info("The table is cleared.");
         } else {
-            LOG.info("Таблица была пустой.");
+            LOG.info("The table was empty.");
         }
+        stm.close();
     }
 
-    public void visitDir(String defaultPath) throws SQLException {
+    public void visitFolder(String defaultPath) throws SQLException {
         File folder = new File(defaultPath);
-        if (folder.isDirectory()) {
-            File[] listOfFiles = folder.listFiles();
-            for (File file : listOfFiles)
-                setFolder(file);
-        } else if (folder.isFile()) {
-            setFolder(folder);
-        }
+        File[] listOfFiles = folder.listFiles();
+        if (folder.isDirectory())
+            for (File file : listOfFiles) insertFolder(file);
+        else LOG.info("Please enter a valid folder.");
+
     }
 
-    public void setFolder(File file) throws SQLException {
+    public void insertFolder(File file) throws SQLException {
         String name = file.getName();
         String path = file.getPath();
-        String type;
-        long size;
-        if (file.isFile()) {
-            type = "file";
-            size = file.length();
-            insertDir(name, path, type, size);
-        } else if (file.isDirectory()) {
-            type = "folder";
-            size = folderSize(file);
-            insertDir(name, path, type, size);
-            visitDir(path);
+        if (file.isFile()) insertIntoTab(name, path, "file", file.length());
+        else if (file.isDirectory()) {
+            insertIntoTab(name, path, "folder", folderSize(file));
+            visitFolder(path);
         }
     }
 
@@ -106,11 +94,8 @@ public class FillDBTable {
         return length;
     }
 
-    public void CloseDB() throws ClassNotFoundException, SQLException {
-        stm.close();
-        set.close();
+    public void closeDB() throws ClassNotFoundException, SQLException {
         connection.close();
-
-        LOG.info("Соединение закрыто");
+        LOG.info("Connection closed.");
     }
 }
