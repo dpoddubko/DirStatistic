@@ -15,51 +15,48 @@ public class FillDBTable implements IFillDBTable {
     private final static Logger LOG = Logger.getLogger(FillDBTable.class);
 
     public Connection connection() {
-        Connection connection;
-        try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException("The database connection isn't established.", e);
+        static {
+            try {
+                Class.forName("org.sqlite.JDBC");
+                return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
+            } catch (ClassNotFoundException | SQLException e) {
+                throw new RuntimeException("The database connection isn't established.", e);
+            }
         }
-        return connection;
     }
 
     public void create() {
         Statement stm = null;
+
         try {
             stm = connection().createStatement();
             stm.execute("CREATE TABLE if not exists 'directory' " +
                     "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                     " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
+            stm.close();
+            connection().close();
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.info("The table hasn't been created.");
-        }finally {
-            try {
-                stm.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
         LOG.info("The table was created or already exists.");
     }
 
     public void insert(String name, String path, String type, long size) {
-        PreparedStatement pst = null;
+        PreparedStatement stm = null;
         try {
-            pst = connection().prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
-            pst.setString(1, name);
-            pst.setString(2, path);
-            pst.setString(3, type);
-            pst.setLong(4, size);
-            pst.executeUpdate();
+            stm = connection().prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+            stm.setString(1, name);
+            stm.setString(2, path);
+            stm.setString(3, type);
+            stm.setLong(4, size);
+            stm.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.info("Data hasn't been inserted into the table");
         } finally {
             try {
-                pst.close();
+                stm.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -109,7 +106,7 @@ public class FillDBTable implements IFillDBTable {
         try {
             Files.walkFileTree(Paths.get(defaultPath), new InsertFileVisitor());
         } catch (IOException exc) {
-            System.out.println("I/O Error");
+            LOG.error("I/O Error");
         }
     }
 
