@@ -11,23 +11,26 @@ import java.sql.*;
 import static java.nio.file.FileVisitResult.CONTINUE;
 
 public class FillDBTable implements IFillDBTable {
+    static {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
     private final static Logger LOG = Logger.getLogger(FillDBTable.class);
 
     public Connection connection() {
-        static {
-            try {
-                Class.forName("org.sqlite.JDBC");
-                return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
-            } catch (ClassNotFoundException | SQLException e) {
-                throw new RuntimeException("The database connection isn't established.", e);
-            }
+        try {
+            return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
+        } catch (SQLException e) {
+            throw new RuntimeException("The database connection isn't established.", e);
         }
     }
 
     public void create() {
         Statement stm = null;
-
         try {
             stm = connection().createStatement();
             stm.execute("CREATE TABLE if not exists 'directory' " +
@@ -38,34 +41,33 @@ public class FillDBTable implements IFillDBTable {
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.info("The table hasn't been created.");
+        }finally {
+            close(stm);
         }
         LOG.info("The table was created or already exists.");
     }
 
     public void insert(String name, String path, String type, long size) {
-        PreparedStatement stm = null;
+        PreparedStatement pst = null;
         try {
-            stm = connection().prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
-            stm.setString(1, name);
-            stm.setString(2, path);
-            stm.setString(3, type);
-            stm.setLong(4, size);
-            stm.executeUpdate();
+            pst = connection().prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+            pst.setString(1, name);
+            pst.setString(2, path);
+            pst.setString(3, type);
+            pst.setLong(4, size);
+            pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             LOG.info("Data hasn't been inserted into the table");
         } finally {
-            try {
-                stm.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            close(pst);
         }
     }
 
     public void read() {
+        Statement stm = null;
         try {
-            Statement stm = connection().createStatement();
+             stm = connection().createStatement();
             ResultSet set = stm.executeQuery("SELECT * FROM directory");
             while (set.next()) {
                 int id = set.getInt("id");
@@ -84,12 +86,15 @@ public class FillDBTable implements IFillDBTable {
             stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            close(stm);
         }
     }
 
     public void clean() {
+        Statement stm = null;
         try {
-            Statement stm = connection().createStatement();
+             stm = connection().createStatement();
             int deletedRows = stm.executeUpdate("DELETE FROM directory");
             if (deletedRows > 0) {
                 LOG.info("The table is cleared.");
@@ -99,6 +104,8 @@ public class FillDBTable implements IFillDBTable {
             stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }finally {
+            close(stm);
         }
     }
 
@@ -110,13 +117,13 @@ public class FillDBTable implements IFillDBTable {
         }
     }
 
-    public void close() {
+    public void close(Statement stm) {
         try {
+            stm.close();
             connection().close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        LOG.info("Connection closed.");
     }
 
     public class InsertFileVisitor extends SimpleFileVisitor<Path> {
