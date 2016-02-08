@@ -9,6 +9,6 @@ public interface IFillDBTable {
     void insert(String name, String path, String type, long size);
     void read();
     void clean();
-    void close(Statement stm);
+    void close(Statement stm, Connection connection);
     void visitFolder(String defaultPath);
 }

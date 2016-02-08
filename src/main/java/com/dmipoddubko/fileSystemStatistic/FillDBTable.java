@@ -11,11 +11,12 @@ import java.sql.*;
 import static java.nio.file.FileVisitResult.CONTINUE;
 
 public class FillDBTable implements IFillDBTable {
+
     static {
         try {
             Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Driver not found.", e);
         }
     }
 
@@ -31,44 +32,44 @@ public class FillDBTable implements IFillDBTable {
 
     public void create() {
         Statement stm = null;
+        Connection connection = connection();
         try {
-            stm = connection().createStatement();
+            stm = connection.createStatement();
             stm.execute("CREATE TABLE if not exists 'directory' " +
                     "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                     " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
-            stm.close();
-            connection().close();
         } catch (SQLException e) {
-            e.printStackTrace();
-            LOG.info("The table hasn't been created.");
-        }finally {
-            close(stm);
+            throw new RuntimeException("The table hasn't been created.", e);
+        } finally {
+            close(stm, connection);
         }
         LOG.info("The table was created or already exists.");
     }
 
     public void insert(String name, String path, String type, long size) {
         PreparedStatement pst = null;
+        Connection connection = connection();
         try {
-            pst = connection().prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+            pst = connection.prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
             pst.setString(1, name);
             pst.setString(2, path);
             pst.setString(3, type);
             pst.setLong(4, size);
             pst.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
-            LOG.info("Data hasn't been inserted into the table");
+            throw new RuntimeException("Data hasn't been inserted into the table", e);
         } finally {
-            close(pst);
+            close(pst, connection);
         }
     }
 
     public void read() {
         Statement stm = null;
+        Connection connection = connection();
+        ResultSet set = null;
         try {
-             stm = connection().createStatement();
-            ResultSet set = stm.executeQuery("SELECT * FROM directory");
+            stm = connection.createStatement();
+             set = stm.executeQuery("SELECT * FROM directory");
             while (set.next()) {
                 int id = set.getInt("id");
                 String name = set.getString("name");
@@ -82,30 +83,33 @@ public class FillDBTable implements IFillDBTable {
                 LOG.info("size = " + size + "\n");
             }
             LOG.info("The table printed.");
-            set.close();
-            stm.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        }finally {
-            close(stm);
+            throw new RuntimeException("The table can't be printed", e);
+        } finally {
+            try {
+                set.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            close(stm, connection);
         }
     }
 
     public void clean() {
         Statement stm = null;
+        Connection connection = connection();
         try {
-             stm = connection().createStatement();
+            stm = connection.createStatement();
             int deletedRows = stm.executeUpdate("DELETE FROM directory");
             if (deletedRows > 0) {
-                LOG.info("The table is cleared.");
+                LOG.info("The table is cleaned.");
             } else {
                 LOG.info("The table was empty.");
             }
-            stm.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        }finally {
-            close(stm);
+            throw new RuntimeException("The table can't be cleaned", e);
+        } finally {
+            close(stm, connection);
         }
     }
 
@@ -117,10 +121,10 @@ public class FillDBTable implements IFillDBTable {
         }
     }
 
-    public void close(Statement stm) {
+    public void close(Statement stm, Connection connection) {
         try {
             stm.close();
-            connection().close();
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
