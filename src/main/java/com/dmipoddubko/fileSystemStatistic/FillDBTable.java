@@ -15,17 +15,18 @@ public class FillDBTable implements IFillDBTable {
     private final static Logger LOG = Logger.getLogger(FillDBTable.class);
 
     public Connection connection() {
-        Connection connection = null;
+        Connection connection;
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
         } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("The database connection isn't established.", e);
         }
         return connection;
     }
 
     public void create() {
+        String msg = "The table was created or already exists.";
         try {
             Statement stm = connection().createStatement();
             stm.execute("CREATE TABLE if not exists 'directory' " +
@@ -34,12 +35,14 @@ public class FillDBTable implements IFillDBTable {
             stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            msg = "The table hasn't been created.";
+        } finally {
+            LOG.info(msg);
         }
-        LOG.info("The table was created or already exists.");
-
     }
 
     public void insert(String name, String path, String type, long size) {
+        String msg = "Data has been inserted into the table";
         try {
             Statement stm = connection().createStatement();
             stm.execute("INSERT INTO 'directory' ('name', 'path', 'type', 'size') " +
@@ -47,8 +50,10 @@ public class FillDBTable implements IFillDBTable {
             stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            msg = "Data has not been inserted into the table";
+        } finally {
+            LOG.info(msg);
         }
-
     }
 
     public void read() {
@@ -76,23 +81,26 @@ public class FillDBTable implements IFillDBTable {
     }
 
     public void clean() {
+        String msg = "The table wasn't cleaned.";
         try {
             Statement stm = connection().createStatement();
             int deletedRows = stm.executeUpdate("DELETE FROM directory");
             if (deletedRows > 0) {
-                LOG.info("The table is cleared.");
+                msg = "The table is cleared.";
             } else {
-                LOG.info("The table was empty.");
+                msg = "The table was empty.";
             }
             stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            LOG.info(msg);
         }
     }
 
     public void visitFolder(String defaultPath) {
         try {
-            Files.walkFileTree(Paths.get(defaultPath), new MyFileVisitor());
+            Files.walkFileTree(Paths.get(defaultPath), new InsertFileVisitor());
         } catch (IOException exc) {
             System.out.println("I/O Error");
         }
@@ -107,7 +115,7 @@ public class FillDBTable implements IFillDBTable {
         LOG.info("Connection closed.");
     }
 
-    public class MyFileVisitor extends SimpleFileVisitor<Path> {
+    public class InsertFileVisitor extends SimpleFileVisitor<Path> {
         @Override
         public FileVisitResult visitFile(Path file,
                                          BasicFileAttributes attr) {
