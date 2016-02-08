@@ -9,7 +9,7 @@ public class FillDBTableApp {
         fillDBTable.connection();
         fillDBTable.create();
         fillDBTable.visitFolder("C:\\Users\\dpoddubko\\Desktop\\testRecursion");
-        fillDBTable.clean();
+        //fillDBTable.clean();
         fillDBTable.read();
         fillDBTable.close();
     }

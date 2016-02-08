@@ -26,33 +26,43 @@ public class FillDBTable implements IFillDBTable {
     }
 
     public void create() {
-        String msg = "The table was created or already exists.";
+        Statement stm = null;
         try {
-            Statement stm = connection().createStatement();
+            stm = connection().createStatement();
             stm.execute("CREATE TABLE if not exists 'directory' " +
                     "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                     " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
-            stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            msg = "The table hasn't been created.";
-        } finally {
-            LOG.info(msg);
+            LOG.info("The table hasn't been created.");
+        }finally {
+            try {
+                stm.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
+        LOG.info("The table was created or already exists.");
     }
 
     public void insert(String name, String path, String type, long size) {
-        String msg = "Data has been inserted into the table";
+        PreparedStatement pst = null;
         try {
-            Statement stm = connection().createStatement();
-            stm.execute("INSERT INTO 'directory' ('name', 'path', 'type', 'size') " +
-                    "VALUES ('" + name + "','" + path + "','" + type + "','" + size + "'); ");
-            stm.close();
+            pst = connection().prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+            pst.setString(1, name);
+            pst.setString(2, path);
+            pst.setString(3, type);
+            pst.setLong(4, size);
+            pst.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            msg = "Data has not been inserted into the table";
+            LOG.info("Data hasn't been inserted into the table");
         } finally {
-            LOG.info(msg);
+            try {
+                pst.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -81,20 +91,17 @@ public class FillDBTable implements IFillDBTable {
     }
 
     public void clean() {
-        String msg = "The table wasn't cleaned.";
         try {
             Statement stm = connection().createStatement();
             int deletedRows = stm.executeUpdate("DELETE FROM directory");
             if (deletedRows > 0) {
-                msg = "The table is cleared.";
+                LOG.info("The table is cleared.");
             } else {
-                msg = "The table was empty.";
+                LOG.info("The table was empty.");
             }
             stm.close();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            LOG.info(msg);
         }
     }
 
@@ -135,7 +142,7 @@ public class FillDBTable implements IFillDBTable {
         @Override
         public FileVisitResult visitFileFailed(Path file,
                                                IOException exc) {
-            System.err.println(exc);
+            LOG.error(exc);
             return CONTINUE;
         }
     }
