@@ -1,6 +1,7 @@
 package com.dmipoddubko.fileSystemStatistic.dao;
 
 import com.dmipoddubko.fileSystemStatistic.connection.ConnectionBDImpl;
+import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderDataImpl;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
 import org.apache.log4j.Logger;
@@ -61,8 +62,8 @@ public class FileDAOImpl implements FileDAO {
         }
     }
 
-    public List<FolderDataImpl> read() {
-        List<FolderDataImpl> data = new ArrayList<>();
+    public List<FolderData> read() {
+        List<FolderData> data = new ArrayList<>();
         Connection connection = baseConnectionBD.connection();
         Statement stm = null;
         ResultSet set = null;
@@ -100,8 +101,8 @@ public class FileDAOImpl implements FileDAO {
         }
     }
 
-    public void print(List<FolderDataImpl> data) {
-        for (FolderDataImpl d : data) {
+    public void print(List<FolderData> data) {
+        for (FolderData d : data) {
             LOG.info("id = " + d.getId());
             LOG.info("name = " + d.getName());
             LOG.info("path = " + d.getPath());

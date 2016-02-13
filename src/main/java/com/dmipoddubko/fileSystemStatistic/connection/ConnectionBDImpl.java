@@ -10,7 +10,9 @@ public class ConnectionBDImpl implements ConnectionBD {
             throw new RuntimeException("Driver not found.", e);
         }
     }
+public void withConnection(){
 
+}
     public Connection connection() {
         try {
             return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
@@ -18,6 +20,7 @@ public class ConnectionBDImpl implements ConnectionBD {
             throw new RuntimeException("The database connection isn't established.", e);
         }
     }
+
 
     public void close(Statement stm, Connection connection) {
         try {

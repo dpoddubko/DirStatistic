@@ -1,6 +1,6 @@
 package com.dmipoddubko.fileSystemStatistic.folderData;
 
-public class FolderDataImpl {
+public class FolderDataImpl implements FolderData {
     private String name;
     private String path;
     private String type;
