@@ -12,14 +12,20 @@ public class ConnectionBDImpl implements ConnectionBD {
     }
 
     public void withConnection(OnConnectionListener onConnectionListener) {
+        Connection connection = connection();
+        Statement stm = null;
         try {
-            Connection connection =connection();
-            Statement stm = connection.createStatement();
-            onConnectionListener.apply(connection);
-
-            connection.close();
+            stm = connection.createStatement();
+            onConnectionListener.apply(stm);
         } catch (SQLException e) {
-            throw new RuntimeException("Some error with database.", e);
+            throw new RuntimeException("Some error with database connection.", e);
+        } finally {
+            try {
+                stm.close();
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException("Some error with database connection.", e);
+            }
         }
     }
 
