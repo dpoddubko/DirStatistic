@@ -22,19 +22,16 @@ public class FileDAOImpl implements FileDAO {
     }
 
     public void create() {
-        Statement stm = null;
-        Connection connection = baseConnectionBD.connection();
-        try {
-            stm = connection.createStatement();
-            stm.execute("CREATE TABLE if not exists 'directory' " +
-                    "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
-        } catch (SQLException e) {
-            throw new RuntimeException("The table hasn't been created.", e);
-        } finally {
-            baseConnectionBD.close(stm, connection);
-        }
-        LOG.info("The table was created or already exists.");
+        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
+            public void apply(Connection connection) throws SQLException {
+                Statement stm;
+                stm = connection.createStatement();
+                stm.execute("CREATE TABLE if not exists 'directory' " +
+                        "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
+                stm.close();
+            }
+        });
     }
 
     public void insert(String defaultPath) {
@@ -45,60 +42,54 @@ public class FileDAOImpl implements FileDAO {
         }
     }
 
-    public void insertPrepare(String name, String path, String type, long size) {
-        Connection connection = baseConnectionBD.connection();
-        PreparedStatement pst = null;
-        try {
-            pst = connection.prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
-            pst.setString(1, name);
-            pst.setString(2, path);
-            pst.setString(3, type);
-            pst.setLong(4, size);
-            pst.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Data hasn't been inserted into the table", e);
-        } finally {
-            baseConnectionBD.close(pst, connection);
-        }
+    public void insertPrepare(final String name, final String path, final String type, final long size) {
+        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
+            public void apply(Connection connection) throws SQLException {
+                PreparedStatement pst;
+                pst = connection.prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+                pst.setString(1, name);
+                pst.setString(2, path);
+                pst.setString(3, type);
+                pst.setLong(4, size);
+                pst.executeUpdate();
+                pst.close();
+            }
+        });
     }
 
     public List<FolderData> read() {
-        List<FolderData> data = new ArrayList<>();
-        Connection connection = baseConnectionBD.connection();
-        Statement stm = null;
-        ResultSet set = null;
-        try {
-            stm = connection.createStatement();
-            set = stm.executeQuery("SELECT * FROM directory");
-            while (set.next()) {
-                data.add(new FolderDataImpl(set.getString("name"), set.getString("path"), set.getString("type"), set.getLong("size"),set.getInt("id")));
+        final List<FolderData> data = new ArrayList<>();
+        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
+            public void apply(Connection connection) throws SQLException {
+                Statement stm;
+                ResultSet set;
+                stm = connection.createStatement();
+                set = stm.executeQuery("SELECT * FROM directory");
+                while (set.next()) {
+                    data.add(new FolderDataImpl(set.getString("name"), set.getString("path"), set.getString("type"), set.getLong("size"), set.getInt("id")));
+                }
+                LOG.info("The table read.");
+                stm.close();
+                set.close();
             }
-            LOG.info("The table read.");
-        } catch (SQLException e) {
-            throw new RuntimeException("The table can't be printed", e);
-        } finally {
-            baseConnectionBD.closeRSet(set);
-            baseConnectionBD.close(stm, connection);
-        }
+        });
         return data;
     }
 
     public void clean() {
-        Statement stm = null;
-        Connection connection = baseConnectionBD.connection();
-        try {
-            stm = connection.createStatement();
-            int deletedRows = stm.executeUpdate("DELETE FROM directory");
-            if (deletedRows > 0) {
-                LOG.info("The table is cleaned.");
-            } else {
-                LOG.info("The table was empty.");
+        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
+            public void apply(Connection connection) throws SQLException {
+                Statement stm;
+                stm = connection.createStatement();
+                int deletedRows = stm.executeUpdate("DELETE FROM directory");
+                stm.close();
+                if (deletedRows > 0) {
+                    LOG.info("The table is cleaned.");
+                } else {
+                    LOG.info("The table was empty.");
+                }
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("The table can't be cleaned", e);
-        } finally {
-            baseConnectionBD.close(stm, connection);
-        }
+        });
     }
 
     public void print(List<FolderData> data) {
@@ -110,7 +101,8 @@ public class FileDAOImpl implements FileDAO {
             LOG.info("size = " + d.getSize() + "\n");
         }
     }
-    public void getStatistic(String path){
+
+    public void getStatistic(String path) {
         create();
         insert(path);
         print(read());

@@ -1,13 +1,15 @@
 package com.dmipoddubko.fileSystemStatistic.connection;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.SQLException;
 
 public interface ConnectionBD {
     Connection connection();
+    void withConnection(OnConnectionListener onConnection);
 
-    void close(Statement stm, Connection connection);
+    interface OnConnectionListener {
+        void apply(Connection connection) throws SQLException;
 
-    void closeRSet(ResultSet set);
+
+    }
 }
