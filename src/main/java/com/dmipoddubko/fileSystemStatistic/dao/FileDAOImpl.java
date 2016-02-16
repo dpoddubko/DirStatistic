@@ -32,15 +32,14 @@ public class FileDAOImpl implements FileDAO {
                 stm.execute("CREATE TABLE if not exists 'directory' " +
                         "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                         " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
-                stm.close();
             }
         });
     }
 
     public void insert(String defaultPath) {
         visitFolder.visit(defaultPath);
-        List<FolderDataImpl> data = visitFolder.getData();
-        for (FolderDataImpl d : data) {
+        List<FolderData> data = visitFolder.getData();
+        for (FolderData d : data) {
             insertPrepare(d.getName(), d.getPath(), d.getType(), d.getSize());
         }
     }
@@ -48,8 +47,7 @@ public class FileDAOImpl implements FileDAO {
     public void insertPrepare(final String name, final String path, final String type, final long size) {
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
             public void apply(Statement stm) throws SQLException {
-                PreparedStatement pst;
-                pst = connection.prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+                PreparedStatement pst = connection.prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
                 pst.setString(1, name);
                 pst.setString(2, path);
                 pst.setString(3, type);
@@ -64,8 +62,7 @@ public class FileDAOImpl implements FileDAO {
         final List<FolderData> data = new ArrayList<>();
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
             public void apply(Statement stm) throws SQLException {
-                ResultSet set;
-                set = stm.executeQuery("SELECT * FROM directory");
+                ResultSet set = stm.executeQuery("SELECT * FROM directory");
                 while (set.next()) {
                     data.add(new FolderDataImpl(set.getString("name"), set.getString("path"), set.getString("type"), set.getLong("size"), set.getInt("id")));
                 }
