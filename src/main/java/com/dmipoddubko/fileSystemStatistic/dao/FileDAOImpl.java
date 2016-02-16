@@ -77,7 +77,6 @@ public class FileDAOImpl implements FileDAO {
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
             public void apply(Statement stm) throws SQLException {
                 int deletedRows = stm.executeUpdate("DELETE FROM directory");
-                stm.close();
                 if (deletedRows > 0) {
                     LOG.info("The table is cleaned.");
                 } else {
