@@ -64,6 +64,7 @@ public class FileDAOImpl implements FileDAO {
                 while (set.next()) {
                     data.add(new FolderDataImpl(set.getString("name"), set.getString("path"), set.getString("type"), set.getLong("size"), set.getInt("id")));
                 }
+                set.close();
             }
         });
         return data;
