@@ -38,12 +38,11 @@ public class ConnectionBDImpl implements ConnectionBD {
 
     public class StatementFactoryImpl implements StatementFactory {
         private Connection connection;
+        private List<Statement> list = new ArrayList<>();
 
         public StatementFactoryImpl(Connection connection) {
             this.connection = connection;
         }
-
-        private List<Statement> list = new ArrayList<>();
 
         public Statement statement() throws SQLException {
             Statement stm = connection.createStatement();

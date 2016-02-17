@@ -9,13 +9,9 @@ public interface FileDAO {
 
     void insert(String defaultPath);
 
-    void insertPrepare(String name, String path, String type, long size);
+    void insertPrepare(FolderData fd);
 
     List<FolderData> read();
 
-    void print(List<FolderData> data);
-
     void clean();
-
-    void getStatistic(String path);
 }
