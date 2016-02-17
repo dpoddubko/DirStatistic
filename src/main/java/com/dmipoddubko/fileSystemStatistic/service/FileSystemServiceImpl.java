@@ -3,12 +3,28 @@ package com.dmipoddubko.fileSystemStatistic.service;
 import com.dmipoddubko.fileSystemStatistic.dao.FileDAO;
 import com.dmipoddubko.fileSystemStatistic.dao.FileDAOImpl;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
+import com.dmipoddubko.fileSystemStatistic.visit.VisitFolder;
+import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
 import org.apache.log4j.Logger;
 
 import java.util.List;
 
 public class FileSystemServiceImpl implements FileSystemService {
     private final static Logger LOG = Logger.getLogger(FileSystemServiceImpl.class);
+    private FileDAO fileDAO;
+
+    public FileSystemServiceImpl() {
+        this.fileDAO = new FileDAOImpl();
+    }
+
+    public void insertPrepare(String defaultPath) {
+        VisitFolder visitFolder = new VisitFolderImpl();
+        visitFolder.visit(defaultPath);
+        List<FolderData> data = visitFolder.getData();
+        for (FolderData d : data) {
+            fileDAO.insert(d);
+        }
+    }
 
     public void print(List<FolderData> data) {
         for (FolderData d : data) {
@@ -21,9 +37,8 @@ public class FileSystemServiceImpl implements FileSystemService {
     }
 
     public void getStatistic(String path) {
-        FileDAO fileDAO = new FileDAOImpl();
         fileDAO.create();
-        fileDAO.insert(path);
+        insertPrepare(path);
         print(fileDAO.read());
         fileDAO.clean();
     }

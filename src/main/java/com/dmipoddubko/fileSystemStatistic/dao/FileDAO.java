@@ -7,9 +7,7 @@ import java.util.List;
 public interface FileDAO {
     void create();
 
-    void insert(String defaultPath);
-
-    void insertPrepare(FolderData fd);
+    void insert(FolderData fd);
 
     List<FolderData> read();
 
