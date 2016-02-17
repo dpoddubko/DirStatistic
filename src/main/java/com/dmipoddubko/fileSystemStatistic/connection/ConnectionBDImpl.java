@@ -13,8 +13,16 @@ public class ConnectionBDImpl implements ConnectionBD {
         }
     }
 
+    public Connection connection() {
+        try {
+            return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
+        } catch (SQLException e) {
+            throw new RuntimeException("The database connection isn't established.", e);
+        }
+    }
+
     public void withConnection(OnConnectionListener onConnectionListener) {
-        StatementFactory sf = new StatementFactoryImpl();
+        StatementFactory sf = new StatementFactoryImpl(connection());
         try {
             onConnectionListener.apply(sf);
         } catch (SQLException e) {
@@ -28,35 +36,41 @@ public class ConnectionBDImpl implements ConnectionBD {
         }
     }
 
-    public Connection connection() {
-        try {
-            return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
-        } catch (SQLException e) {
-            throw new RuntimeException("The database connection isn't established.", e);
-        }
-    }
-
     public class StatementFactoryImpl implements StatementFactory {
-        List<Statement> sfList = new ArrayList<>();
-        Connection connection = connection();
+        private Connection connection;
+
+        public StatementFactoryImpl(Connection connection) {
+            this.connection = connection;
+        }
+
+        private List<Statement> list = new ArrayList<>();
 
         public Statement statement() throws SQLException {
             Statement stm = connection.createStatement();
-            sfList.add(stm);
+            list.add(stm);
             return stm;
         }
 
         public PreparedStatement preparedStatement(String s) throws SQLException {
             PreparedStatement pst = connection.prepareStatement(s);
-            sfList.add(pst);
+            list.add(pst);
             return pst;
         }
 
-        public void close() throws SQLException {
-            for (Statement s : sfList) {
-                s.close();
+        public void close() {
+            try {
+                for (Statement s : list) {
+                    s.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    throw new RuntimeException("Some error with database connection.", e);
+                }
             }
-            connection.close();
         }
     }
 }
