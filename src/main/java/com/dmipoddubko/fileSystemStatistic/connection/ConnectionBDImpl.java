@@ -1,6 +1,8 @@
 package com.dmipoddubko.fileSystemStatistic.connection;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConnectionBDImpl implements ConnectionBD {
     static {
@@ -12,17 +14,14 @@ public class ConnectionBDImpl implements ConnectionBD {
     }
 
     public void withConnection(OnConnectionListener onConnectionListener) {
-        Connection connection = connection();
-        Statement stm = null;
+        StatementFactory sf = new StatementFactoryImpl();
         try {
-            stm = connection.createStatement();
-            onConnectionListener.apply(stm);
+            onConnectionListener.apply(sf);
         } catch (SQLException e) {
             throw new RuntimeException("Some error with database connection.", e);
         } finally {
             try {
-                stm.close();
-                connection.close();
+                sf.close();
             } catch (SQLException e) {
                 throw new RuntimeException("Some error with database connection.", e);
             }
@@ -34,6 +33,30 @@ public class ConnectionBDImpl implements ConnectionBD {
             return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
         } catch (SQLException e) {
             throw new RuntimeException("The database connection isn't established.", e);
+        }
+    }
+
+    public class StatementFactoryImpl implements StatementFactory {
+        List<Statement> sfList = new ArrayList<>();
+        Connection connection = connection();
+
+        public Statement statement() throws SQLException {
+            Statement stm = connection.createStatement();
+            sfList.add(stm);
+            return stm;
+        }
+
+        public PreparedStatement preparedStatement(String s) throws SQLException {
+            PreparedStatement pst = connection.prepareStatement(s);
+            sfList.add(pst);
+            return pst;
+        }
+
+        public void close() throws SQLException {
+            for (Statement s : sfList) {
+                s.close();
+            }
+            connection.close();
         }
     }
 }

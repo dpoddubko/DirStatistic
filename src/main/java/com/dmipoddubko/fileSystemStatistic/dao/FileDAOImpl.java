@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,8 +27,8 @@ public class FileDAOImpl implements FileDAO {
 
     public void create() {
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(Statement stm) throws SQLException {
-                stm.execute("CREATE TABLE if not exists 'directory' " +
+            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
+                sf.statement().execute("CREATE TABLE if not exists 'directory' " +
                         "('id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                         " 'name' varchar(50), 'path' text, 'type' varchar(10), 'size' bigint);");
             }
@@ -46,14 +45,13 @@ public class FileDAOImpl implements FileDAO {
 
     public void insertPrepare(final String name, final String path, final String type, final long size) {
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(Statement stm) throws SQLException {
-                PreparedStatement pst = connection.prepareStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
+                PreparedStatement pst = sf.preparedStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
                 pst.setString(1, name);
                 pst.setString(2, path);
                 pst.setString(3, type);
                 pst.setLong(4, size);
                 pst.executeUpdate();
-                pst.close();
             }
         });
     }
@@ -61,13 +59,11 @@ public class FileDAOImpl implements FileDAO {
     public List<FolderData> read() {
         final List<FolderData> data = new ArrayList<>();
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(Statement stm) throws SQLException {
-                ResultSet set = stm.executeQuery("SELECT * FROM directory");
+            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
+                ResultSet set = sf.statement().executeQuery("SELECT * FROM directory");
                 while (set.next()) {
                     data.add(new FolderDataImpl(set.getString("name"), set.getString("path"), set.getString("type"), set.getLong("size"), set.getInt("id")));
                 }
-                LOG.info("The table read.");
-                set.close();
             }
         });
         return data;
@@ -75,13 +71,8 @@ public class FileDAOImpl implements FileDAO {
 
     public void clean() {
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(Statement stm) throws SQLException {
-                int deletedRows = stm.executeUpdate("DELETE FROM directory");
-                if (deletedRows > 0) {
-                    LOG.info("The table is cleaned.");
-                } else {
-                    LOG.info("The table was empty.");
-                }
+            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
+                sf.statement().executeUpdate("DELETE FROM directory");
             }
         });
     }

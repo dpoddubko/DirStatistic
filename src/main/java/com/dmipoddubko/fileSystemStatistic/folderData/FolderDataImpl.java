@@ -19,7 +19,6 @@ public class FolderDataImpl implements FolderData {
         this.id = id;
     }
 
-
     public String getName() {
         return name;
     }

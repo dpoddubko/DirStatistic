@@ -1,5 +1,6 @@
 package com.dmipoddubko.fileSystemStatistic.visit;
 
+import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderDataImpl;
 import org.apache.commons.io.FileUtils;
 
@@ -12,7 +13,7 @@ import java.util.List;
 import static java.nio.file.FileVisitResult.CONTINUE;
 
 public class VisitFolderImpl implements VisitFolder{
-    List<FolderDataImpl> data = new ArrayList<>();
+    List<FolderData> data = new ArrayList<>();
 
         public void visit(String defaultPath) {
         try {
@@ -22,7 +23,7 @@ public class VisitFolderImpl implements VisitFolder{
         }
     }
 
-    public List<FolderDataImpl> getData() {
+    public List<FolderData> getData() {
         return data;
     }
 
