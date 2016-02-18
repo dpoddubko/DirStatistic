@@ -36,7 +36,7 @@ public class ConnectionBDImpl implements ConnectionBD {
         }
     }
 
-    public class StatementFactoryImpl implements StatementFactory {
+    public static class StatementFactoryImpl implements StatementFactory {
         private Connection connection;
         private List<Statement> list = new ArrayList<>();
 

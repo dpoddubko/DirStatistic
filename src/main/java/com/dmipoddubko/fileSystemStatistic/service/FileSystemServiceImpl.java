@@ -19,11 +19,7 @@ public class FileSystemServiceImpl implements FileSystemService {
 
     public void insertPrepare(String defaultPath) {
         VisitFolder visitFolder = new VisitFolderImpl();
-        visitFolder.visit(defaultPath);
-        List<FolderData> data = visitFolder.getData();
-        for (FolderData d : data) {
-            fileDAO.insert(d);
-        }
+        fileDAO.insert(visitFolder.visit(defaultPath));
     }
 
     public void print(List<FolderData> data) {

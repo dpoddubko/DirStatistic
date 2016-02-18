@@ -12,22 +12,25 @@ import java.util.List;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
 
-public class VisitFolderImpl implements VisitFolder{
-    List<FolderData> data = new ArrayList<>();
+public class VisitFolderImpl implements VisitFolder {
 
-        public void visit(String defaultPath) {
+    public List<FolderData> visit(String defaultPath) {
+        InsertFileVisitor fileVisitor = new InsertFileVisitor();
         try {
-            Files.walkFileTree(Paths.get(defaultPath), new InsertFileVisitor());
+            Files.walkFileTree(Paths.get(defaultPath), fileVisitor);
         } catch (IOException e) {
             throw new RuntimeException("Folder error visit.", e);
         }
+        return fileVisitor.data;
     }
 
-    public List<FolderData> getData() {
-        return data;
-    }
+    public static class InsertFileVisitor extends SimpleFileVisitor<Path> {
+        private List<FolderData> data;
 
-    public class InsertFileVisitor extends SimpleFileVisitor<Path> {
+        public InsertFileVisitor() {
+            this.data = new ArrayList<>();
+        }
+
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
             if (attr.isRegularFile()) {

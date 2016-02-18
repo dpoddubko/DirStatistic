@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class FileDAOImpl implements FileDAO {
@@ -40,6 +41,13 @@ public class FileDAOImpl implements FileDAO {
                 pst.executeUpdate();
             }
         });
+    }
+
+    @Override
+    public void insert(Collection<FolderData> collection) {
+        for (FolderData c : collection) {
+             insert(c);
+        }
     }
 
     public List<FolderData> read() {
