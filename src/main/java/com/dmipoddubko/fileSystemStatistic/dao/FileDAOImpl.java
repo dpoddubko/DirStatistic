@@ -44,10 +44,25 @@ public class FileDAOImpl implements FileDAO {
     }
 
     @Override
-    public void insert(Collection<FolderData> collection) {
-        for (FolderData c : collection) {
-             insert(c);
-        }
+    public void insert(final Collection<FolderData> collection) {
+        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
+            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
+                int batchSize = 30;
+                int count = 0;
+                PreparedStatement pst = sf.preparedStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
+                for (FolderData c : collection) {
+                    pst.setString(1, c.getName());
+                    pst.setString(2, c.getPath());
+                    pst.setString(3, c.getType());
+                    pst.setLong(4, c.getSize());
+                    pst.addBatch();
+                    if (++count % batchSize == 0) {
+                        pst.executeBatch();
+                    }
+                }
+                pst.executeBatch();
+            }
+        });
     }
 
     public List<FolderData> read() {
