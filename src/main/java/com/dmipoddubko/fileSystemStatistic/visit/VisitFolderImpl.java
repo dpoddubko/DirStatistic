@@ -19,7 +19,7 @@ public class VisitFolderImpl implements VisitFolder {
         try {
             Files.walkFileTree(Paths.get(defaultPath), fileVisitor);
         } catch (IOException e) {
-            throw new RuntimeException("Folder error visit.", e);
+            throw new RuntimeException("Folder error createFiles.", e);
         }
         return fileVisitor.data;
     }

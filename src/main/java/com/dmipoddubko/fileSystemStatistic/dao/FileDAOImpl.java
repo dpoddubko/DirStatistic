@@ -10,12 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class FileDAOImpl implements FileDAO {
 
     private ConnectionBD baseConnectionBD;
-    private final static int BATCH_SIZE = 30;
+    private final static int BATCH_SIZE = 1000;
 
     public FileDAOImpl() {
         baseConnectionBD = new ConnectionBDImpl();
@@ -32,9 +33,7 @@ public class FileDAOImpl implements FileDAO {
     }
 
     public void insert(final FolderData fd) {
-        List<FolderData> list = new ArrayList<>();
-        list.add(fd);
-        insert(list);
+        insert(Collections.singletonList(fd));
     }
 
     public void insert(final Collection<FolderData> collection) {
