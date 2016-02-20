@@ -15,6 +15,7 @@ import java.util.List;
 public class FileDAOImpl implements FileDAO {
 
     private ConnectionBD baseConnectionBD;
+    private final static int BATCH_SIZE = 30;
 
     public FileDAOImpl() {
         baseConnectionBD = new ConnectionBDImpl();
@@ -31,23 +32,14 @@ public class FileDAOImpl implements FileDAO {
     }
 
     public void insert(final FolderData fd) {
-        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
-                PreparedStatement pst = sf.preparedStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
-                pst.setString(1, fd.getName());
-                pst.setString(2, fd.getPath());
-                pst.setString(3, fd.getType());
-                pst.setLong(4, fd.getSize());
-                pst.executeUpdate();
-            }
-        });
+        List<FolderData> list = new ArrayList<>();
+        list.add(fd);
+        insert(list);
     }
 
-    @Override
     public void insert(final Collection<FolderData> collection) {
         baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
             public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
-                int batchSize = 30;
                 int count = 0;
                 PreparedStatement pst = sf.preparedStatement("INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)");
                 for (FolderData c : collection) {
@@ -56,7 +48,7 @@ public class FileDAOImpl implements FileDAO {
                     pst.setString(3, c.getType());
                     pst.setLong(4, c.getSize());
                     pst.addBatch();
-                    if (++count % batchSize == 0) {
+                    if (++count % BATCH_SIZE == 0) {
                         pst.executeBatch();
                     }
                 }
