@@ -15,6 +15,12 @@ public class FileSystemServiceImpl implements FileSystemService {
     }
 
     public void index(String path) {
+        fileDAO.create();
         fileDAO.insert(visitFolder.visit(path));
     }
+
+    public FileDAO getFileDAO() {
+        return fileDAO;
+    }
 }
+
