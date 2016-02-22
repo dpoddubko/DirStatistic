@@ -16,7 +16,7 @@ import java.util.List;
 public class FileDAOImpl implements FileDAO {
 
     private ConnectionBD baseConnectionBD;
-    private final static int BATCH_SIZE = 1000;
+    private final static int BATCH_SIZE = 50;
 
     public FileDAOImpl() {
         baseConnectionBD = new ConnectionBDImpl();
