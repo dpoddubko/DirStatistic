@@ -1,7 +1,6 @@
 package com.dmipoddubko.fileSystemStatistic;
 
 import com.dmipoddubko.fileSystemStatistic.dir.DirDataImpl;
-import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 import com.dmipoddubko.fileSystemStatistic.service.FileSystemServiceImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -42,36 +41,35 @@ public class DirTest {
             }
             pool.invokeAll(tasks);
         } catch (InterruptedException e) {
-            new RuntimeException("Some error with creating files", e);
+            throw new RuntimeException("Some error with creating files", e);
         } finally {
             pool.shutdown();
         }
-
     }
 
 
-        @AfterClass
-        public static void deleteDirTest() {
-            DirDataImpl dirData = new DirDataImpl();
-            List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
-            ExecutorService pool = Executors.newFixedThreadPool(THREADS);
-            List<Callable<Object>> tasks = new ArrayList<>();
-            try {
-                for (String p : paths) {
-                    tasks.add(new Callable<Object>() {
-                        public Object call() throws Exception {
-                            dirData.delDir(p);
-                            return null;
-                        }
-                    });
-                }
-                pool.invokeAll(tasks);
-            } catch (InterruptedException e) {
-                new RuntimeException("Some error with creating files", e);
-            } finally {
-                pool.shutdown();
+    @AfterClass
+    public static void deleteDirTest() {
+        DirDataImpl dirData = new DirDataImpl();
+        List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
+        ExecutorService pool = Executors.newFixedThreadPool(THREADS);
+        List<Callable<Object>> tasks = new ArrayList<>();
+        try {
+            for (String p : paths) {
+                tasks.add(new Callable<Object>() {
+                    public Object call() throws Exception {
+                        dirData.delDir(p);
+                        return null;
+                    }
+                });
             }
+            pool.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Some error with creating files", e);
+        } finally {
+            pool.shutdown();
         }
+    }
 
     @Test
     public void fileExistTest() {
@@ -87,8 +85,6 @@ public class DirTest {
                     (path, attributes) -> attributes.isRegularFile()
             ).count();
             assertEquals(499950, countFiles);
-            System.out.println(countDir);
-            System.out.println(countFiles);
         } catch (IOException e) {
             throw new RuntimeException("Some error with counting sub-folders.", e);
         }
@@ -99,10 +95,9 @@ public class DirTest {
         FileSystemServiceImpl systemService = new FileSystemServiceImpl();
         systemService.getFileDAO().create();
         systemService.index(rootPath);
-        List<FolderData> list = systemService.getFileDAO().read();
-        assertEquals(499980, list.size());
+        systemService.getFileDAO().count();
+        assertEquals(499980, systemService.getFileDAO().count());
         systemService.getFileDAO().clean();
-        list = systemService.getFileDAO().read();
-        assertEquals(0, list.size());
+        assertEquals(0, systemService.getFileDAO().count());
     }
 }

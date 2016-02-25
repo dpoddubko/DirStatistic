@@ -1,5 +1,6 @@
 package com.dmipoddubko.fileSystemStatistic.dao;
 
+import com.dmipoddubko.fileSystemStatistic.connection.ConnectionBD;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 
 import java.util.Collection;
@@ -15,4 +16,8 @@ public interface FileDAO {
     List<FolderData> read();
 
     void clean();
+
+    int count();
+
+    ConnectionBD getBaseConnectionBD();
 }
