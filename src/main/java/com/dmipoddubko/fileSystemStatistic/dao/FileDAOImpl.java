@@ -78,19 +78,6 @@ public class FileDAOImpl implements FileDAO {
         });
     }
 
-    public int count() {
-        final int[] count = new int[1];
-        baseConnectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
-                try (ResultSet set = sf.statement().executeQuery("SELECT COUNT(*) FROM 'directory';")) {
-                    set.next();
-                    count[0] = set.getInt(1);
-                }
-            }
-        });
-        return count[0];
-    }
-
     public ConnectionBD getBaseConnectionBD() {
         return baseConnectionBD;
     }

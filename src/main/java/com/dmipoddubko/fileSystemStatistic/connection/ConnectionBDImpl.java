@@ -13,7 +13,7 @@ public class ConnectionBDImpl implements ConnectionBD {
         }
     }
 
-    public Connection connection() {
+    public static Connection connection() {
         try {
             return DriverManager.getConnection("jdbc:sqlite:folder.sqlite");
         } catch (SQLException e) {

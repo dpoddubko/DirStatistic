@@ -26,14 +26,14 @@ public class DirDataImpl implements DirData {
         return prepPath.toString();
     }
 
-    public List<String> dividePath(String path, int depth, int treads) {
+    public static List<String> dividePath(String path, int depth, int treads) {
         List<String> paths = new ArrayList<>();
         StringBuilder prepPath = new StringBuilder().append(path);
         paths.add(prepPath.toString());
         int num = depth / treads;
         for (int i = 1; i < depth; i++) {
             prepPath = prepPath.append(File.separator).append(i);
-        if (i%num==0) paths.add(prepPath.toString());
+            if (i % num == 0) paths.add(prepPath.toString());
         }
         return paths;
     }

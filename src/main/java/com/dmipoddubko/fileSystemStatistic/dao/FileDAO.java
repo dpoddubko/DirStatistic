@@ -17,7 +17,5 @@ public interface FileDAO {
 
     void clean();
 
-    int count();
-
     ConnectionBD getBaseConnectionBD();
 }
