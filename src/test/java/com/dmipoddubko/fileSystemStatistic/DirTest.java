@@ -10,9 +10,9 @@ import com.dmipoddubko.fileSystemStatistic.visit.VisitFolder;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,61 +23,63 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DirTest {
-    private static String rootPath = "C:\\TestFolder1";
+    private static String rootPath = "C:\\TestFolder";
     private final static int THREADS = 5;
     private final static Logger LOG = Logger.getLogger(DirTest.class);
-    private static ExecutorService pool = Executors.newFixedThreadPool(THREADS);
+    private static ExecutorService executor = Executors.newFixedThreadPool(THREADS);
     private static FileSystemServiceImpl systemService = new FileSystemServiceImpl();
     private ConnectionBD connectionBD = new ConnectionBDImpl();
 
-    @BeforeClass
-    public static void setUp() throws InterruptedException {
+    @BeforeTest
+    public static void setUp() throws InterruptedException, ExecutionException {
         DirDataImpl dirData = new DirDataImpl();
         String path = dirData.buildPath(rootPath, 30);
         dirData.createDir(path);
         List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
-
-        List<Callable<Object>> tasks = new ArrayList<>();
+        List<Future<String>> list = new ArrayList<>();
         for (String p : paths) {
-            tasks.add(new Callable<Object>() {
-                public Object call() throws Exception {
+            Future<String> submit = executor.submit(new Callable<String>() {
+                public String call() throws Exception {
                     dirData.createFiles(p);
-                    return null;
+                    return "It done!";
                 }
             });
+            list.add(submit);
         }
-        pool.invokeAll(tasks);
+        for (Future<String> future : list) {
+            future.get();
+        }
         systemService.getFileDAO().create();
     }
 
-    @AfterClass
-    public static void tearDown() throws InterruptedException {
+    @AfterTest
+    public static void tearDown() throws InterruptedException, ExecutionException {
         PropertyConfigurator.configure("log4j.properties");
         DirDataImpl dirData = new DirDataImpl();
         List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
-        List<Callable<Object>> tasks = new ArrayList<>();
+        List<Future<String>> list = new ArrayList<>();
         try {
             for (String p : paths) {
-                tasks.add(new Callable<Object>() {
-                    public Object call() throws Exception {
+                Future<String> submit = executor.submit(new Callable<String>() {
+                    public String call() throws Exception {
                         dirData.delDir(p);
-                        return null;
+                        return "It done!";
                     }
                 });
+                list.add(submit);
             }
-            pool.invokeAll(tasks);
+            for (Future<String> future : list) {
+                future.get();
+            }
         } finally {
-            pool.shutdown();
-            while (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
+            executor.shutdown();
+            while (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
                 LOG.info("Awaiting completion of threads.");
             }
         }
