@@ -44,11 +44,9 @@ public class DirTest {
         List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
         List<Future<String>> list = new ArrayList<>();
         for (String p : paths) {
-            Future<String> submit = executor.submit(new Callable<String>() {
-                public String call() throws Exception {
-                    dirData.createFiles(p);
-                    return "It done!";
-                }
+            Future<String> submit = executor.submit(() -> {
+                dirData.createFiles(p);
+                return "It done!";
             });
             list.add(submit);
         }
@@ -66,11 +64,9 @@ public class DirTest {
         List<Future<String>> list = new ArrayList<>();
         try {
             for (String p : paths) {
-                Future<String> submit = executor.submit(new Callable<String>() {
-                    public String call() throws Exception {
-                        dirData.delDir(p);
-                        return "It done!";
-                    }
+                Future<String> submit = executor.submit(() -> {
+                    dirData.delDir(p);
+                    return "It done!";
                 });
                 list.add(submit);
             }
@@ -132,11 +128,9 @@ public class DirTest {
 
     @Test
     public void tableExistTest() {
-        connectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
-                try (ResultSet set = sf.statement().executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='directory';")) {
-                    assertEquals("directory", set.getString("name"));
-                }
+        connectionBD.withConnection(sf -> {
+            try (ResultSet set = sf.statement().executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='directory';")) {
+                assertEquals("directory", set.getString("name"));
             }
         });
     }
@@ -159,11 +153,9 @@ public class DirTest {
     }
 
     public void countTest(int num) {
-        connectionBD.withConnection(new ConnectionBDImpl.OnConnectionListener() {
-            public void apply(ConnectionBD.StatementFactory sf) throws SQLException {
-                try (ResultSet set = sf.statement().executeQuery("SELECT COUNT(*) FROM 'directory';")) {
-                    assertEquals(num, set.getInt(1));
-                }
+        connectionBD.withConnection(sf -> {
+            try (ResultSet set = sf.statement().executeQuery("SELECT COUNT(*) FROM 'directory';")) {
+                assertEquals(num, set.getInt(1));
             }
         });
     }
