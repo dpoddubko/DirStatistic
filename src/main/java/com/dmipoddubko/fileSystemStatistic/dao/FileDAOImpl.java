@@ -61,7 +61,7 @@ public class FileDAOImpl implements FileDAO {
         jdbcTemplate.update("DELETE FROM directory");
     }
 
-    public class FolderDataMapper implements RowMapper<FolderData> {
+    public static class FolderDataMapper implements RowMapper<FolderData> {
         public FolderData mapRow(ResultSet rs, int rowNum) throws SQLException {
             return new FolderDataImpl(rs.getString("name"), rs.getString("path"), rs.getString("type"), rs.getLong("size"), rs.getInt("id"));
         }
