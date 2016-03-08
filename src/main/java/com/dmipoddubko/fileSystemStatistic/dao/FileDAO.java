@@ -1,9 +1,7 @@
 package com.dmipoddubko.fileSystemStatistic.dao;
 
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
-import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 public interface FileDAO {
@@ -17,10 +15,5 @@ public interface FileDAO {
     List<FolderData> read();
 
     void clean();
-
-    JdbcTemplate getJdbcTemplate();
-
-    void setDataSource(DataSource dataSource);
-
 }
 
