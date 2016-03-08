@@ -1,20 +1,19 @@
 package com.dmipoddubko.fileSystemStatistic;
 
+import com.dmipoddubko.fileSystemStatistic.dao.FileDAOImpl;
 import com.dmipoddubko.fileSystemStatistic.dir.DirDataImpl;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderDataImpl;
-import com.dmipoddubko.fileSystemStatistic.service.FileSystemServiceImpl;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolder;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Test;
-
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-
-
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 
@@ -32,12 +31,11 @@ import static org.junit.Assert.assertEquals;
 public class DirTest {
 
     private static String rootPath = "C:\\TestDirectory";
-
     private final static int THREADS = 5;
     private final static Logger LOG = Logger.getLogger(DirTest.class);
     private static ExecutorService executor = Executors.newFixedThreadPool(THREADS);
-    private static FileSystemServiceImpl systemService = new FileSystemServiceImpl();
-
+    private ApplicationContext context = new ClassPathXmlApplicationContext("Beans.xml");
+    private FileDAOImpl fileJDBC = (FileDAOImpl) context.getBean("fileJDBCTemplate");
 
     @BeforeTest
     public static void setUp() throws InterruptedException, ExecutionException {
@@ -56,7 +54,6 @@ public class DirTest {
         for (Future<String> future : list) {
             future.get();
         }
-        systemService.getFileDAO().create();
     }
 
     @AfterTest
@@ -121,9 +118,9 @@ public class DirTest {
         assertEquals(99996, data.size());
     }
 
-
     @Test
-    public void tableExistTest() {
+    public void createTest() {
+        fileJDBC.create();
         PropertyConfigurator.configure("log4j.properties");
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='directory'";
@@ -132,12 +129,23 @@ public class DirTest {
     }
 
     @Test
-    public void countTest() {
-        PropertyConfigurator.configure("log4j.properties");
-        JdbcTemplate jdbcTemplate = getJdbcTemplate();
-        String sql = "SELECT COUNT(*) FROM 'directory';";
-        List<Integer> intLst = jdbcTemplate.query(sql, new IntMapper());
-        assertEquals(0, (int) intLst.get(0));
+    public void insertTest() {
+        VisitFolder visitFolder = new VisitFolderImpl();
+        List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
+        List<FolderData> data = visitFolder.visit(paths.get(4));
+        fileJDBC.insert(data);
+        countTest(499980);
+    }
+
+    @Test
+    public void readTest() {
+        assertEquals(499980, fileJDBC.read().size());
+    }
+
+    @Test
+    public void cleanTest() {
+        fileJDBC.clean();
+        countTest(0);
     }
 
     class StrMapper implements RowMapper<String> {
@@ -150,6 +158,14 @@ public class DirTest {
         public Integer mapRow(ResultSet rs, int rowNum) throws SQLException {
             return rs.getInt(1);
         }
+    }
+
+    public void countTest(int num) {
+        PropertyConfigurator.configure("log4j.properties");
+        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+        String sql = "SELECT COUNT(*) FROM 'directory';";
+        List<Integer> intLst = jdbcTemplate.query(sql, new IntMapper());
+        assertEquals(num, (int) intLst.get(0));
     }
 
     public JdbcTemplate getJdbcTemplate() {
