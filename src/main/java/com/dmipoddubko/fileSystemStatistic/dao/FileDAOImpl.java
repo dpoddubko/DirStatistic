@@ -33,23 +33,23 @@ public class FileDAOImpl implements FileDAO {
     }
 
     @Override
-    public void insert(List<FolderData> collection) {
+    public void insert(List<FolderData> list) {
         String SQL = "INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)";
-        for (FolderData c : collection) {
             jdbcTemplate.batchUpdate(SQL, new BatchPreparedStatementSetter() {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    ps.setString(1, c.getName());
-                    ps.setString(2, c.getPath());
-                    ps.setString(3, c.getType());
-                    ps.setString(4, String.valueOf(c.getSize()));
+                    FolderData l = list.get(i);
+                    ps.setString(1, l.getName());
+                    ps.setString(2, l.getPath());
+                    ps.setString(3, l.getType());
+                    ps.setLong(4, l.getSize());
                 }
                 @Override
                 public int getBatchSize() {
-                    return collection.size();
+                    return list.size();
                 }
             });
-        }
+
     }
 
     @Override
@@ -64,8 +64,7 @@ public class FileDAOImpl implements FileDAO {
 
     public class FolderDataMapper implements RowMapper<FolderData> {
         public FolderData mapRow(ResultSet rs, int rowNum) throws SQLException {
-            FolderData data = new FolderDataImpl(rs.getString("name"), rs.getString("path"), rs.getString("type"), rs.getLong("size"), rs.getInt("id"));
-            return data;
+            return new FolderDataImpl(rs.getString("name"), rs.getString("path"), rs.getString("type"), rs.getLong("size"), rs.getInt("id"));
         }
     }
 }
