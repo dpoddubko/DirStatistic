@@ -35,20 +35,21 @@ public class FileDAOImpl implements FileDAO {
     @Override
     public void insert(List<FolderData> list) {
         String SQL = "INSERT INTO 'directory' ('name', 'path', 'type', 'size') VALUES (?, ?, ?, ?)";
-            jdbcTemplate.batchUpdate(SQL, new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    FolderData l = list.get(i);
-                    ps.setString(1, l.getName());
-                    ps.setString(2, l.getPath());
-                    ps.setString(3, l.getType());
-                    ps.setLong(4, l.getSize());
-                }
-                @Override
-                public int getBatchSize() {
-                    return list.size();
-                }
-            });
+        jdbcTemplate.batchUpdate(SQL, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                FolderData l = list.get(i);
+                ps.setString(1, l.getName());
+                ps.setString(2, l.getPath());
+                ps.setString(3, l.getType());
+                ps.setLong(4, l.getSize());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return list.size();
+            }
+        });
 
     }
 
