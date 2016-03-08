@@ -44,13 +44,11 @@ public class FileDAOImpl implements FileDAO {
                 ps.setString(3, l.getType());
                 ps.setLong(4, l.getSize());
             }
-
             @Override
             public int getBatchSize() {
                 return list.size();
             }
         });
-
     }
 
     @Override
