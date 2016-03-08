@@ -9,9 +9,12 @@ import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Test;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+
+
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 
@@ -25,13 +28,15 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
+
 public class DirTest {
+
     private static String rootPath = "C:\\TestDirectory";
+
     private final static int THREADS = 5;
     private final static Logger LOG = Logger.getLogger(DirTest.class);
     private static ExecutorService executor = Executors.newFixedThreadPool(THREADS);
     private static FileSystemServiceImpl systemService = new FileSystemServiceImpl();
-
 
 
     @BeforeTest
@@ -126,13 +131,13 @@ public class DirTest {
         assertEquals("directory", strLst.get(0));
     }
 
-   @Test
+    @Test
     public void countTest() {
         PropertyConfigurator.configure("log4j.properties");
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT COUNT(*) FROM 'directory';";
         List<Integer> intLst = jdbcTemplate.query(sql, new IntMapper());
-        assertEquals(0, (int)intLst.get(0));
+        assertEquals(0, (int) intLst.get(0));
     }
 
     class StrMapper implements RowMapper<String> {
