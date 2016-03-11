@@ -4,19 +4,27 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd ">
 
-    <!-- Initialization for data source -->
     <bean id="dataSource"
           class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName" value="org.sqlite.JDBC"/>
         <property name="url" value="jdbc:sqlite:folder.sqlite"/>
-
     </bean>
 
-    <!-- Definition for studentJDBCTemplate bean -->
     <bean id="fileJDBCTemplate"
           class="com.dmipoddubko.fileSystemStatistic.dao.FileDAOImpl">
         <property name="dataSource"  ref="dataSource" />
     </bean>
 
+    <bean id="FolderDataTest"
+          class="com.dmipoddubko.fileSystemStatistic.folderData.FolderDataImpl">
+        <constructor-arg index="0" value="some_file.txt"/>
+        <constructor-arg index="1" value="C:\SomeFolder"/>
+        <constructor-arg index="2" value="file"/>
+        <constructor-arg index="3" value="777"/>
+        <constructor-arg index="4" value="1"/>
+    </bean>
+    <bean id="VisitFolderTest"
+          class="com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl">
+    </bean>
 </beans>
 
