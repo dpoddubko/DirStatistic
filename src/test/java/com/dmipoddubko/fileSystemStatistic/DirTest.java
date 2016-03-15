@@ -35,7 +35,7 @@ public class DirTest {
     private final static Logger LOG = Logger.getLogger(DirTest.class);
     private static ExecutorService executor = Executors.newFixedThreadPool(THREADS);
     private ApplicationContext context = new ClassPathXmlApplicationContext("Beans.xml");
-    private FileDAOImpl fileJDBC = (FileDAOImpl) context.getBean("fileJDBCTemplate");
+    private FileDAOImpl fileDAO = (FileDAOImpl) context.getBean("fileDAO");
 
     @BeforeTest
     public static void setUp() throws InterruptedException, ExecutionException {
@@ -96,17 +96,22 @@ public class DirTest {
 
     @Test
     public void folderDataTest() {
-        FolderDataImpl folderData = (FolderDataImpl) context.getBean("FolderDataTest");
-        assertEquals("some_file.txt", folderData.getName());
-        assertEquals("C:\\SomeFolder", folderData.getPath());
-        assertEquals("file", folderData.getType());
-        assertEquals(777, folderData.getSize());
-        assertEquals(1, folderData.getId());
+        String name = "some_file.txt";
+        String path = "C:\\SomeFolder";
+        String type = "file";
+        long size = 55;
+        int id = 1;
+        FolderData folderData = new FolderDataImpl(name, path, type, size, id);
+        assertEquals(name, folderData.getName());
+        assertEquals(path, folderData.getPath());
+        assertEquals(type, folderData.getType());
+        assertEquals(size, folderData.getSize());
+        assertEquals(id, folderData.getId());
     }
 
     @Test
     public void visitFolderImplTest() {
-        VisitFolder visitFolder = (VisitFolderImpl) context.getBean("VisitFolderTest");
+        VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
         assertEquals(99996, data.size());
@@ -114,7 +119,7 @@ public class DirTest {
 
     @Test
     public void createTest() {
-        fileJDBC.create();
+        fileDAO.create();
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='directory'";
         List<String> strLst = jdbcTemplate.query(sql, new StrMapper());
@@ -123,31 +128,31 @@ public class DirTest {
 
     @Test
     public void insertTest() {
-        VisitFolder visitFolder = (VisitFolderImpl) context.getBean("VisitFolderTest");
+        VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
-        fileJDBC.insert(data);
+        fileDAO.insert(data);
         countTest(499980);
     }
 
     @Test
     public void readTest() {
-        assertEquals(499980, fileJDBC.read().size());
+        assertEquals(499980, fileDAO.read().size());
     }
 
     @Test
     public void cleanTest() {
-        fileJDBC.clean();
+        fileDAO.clean();
         countTest(0);
     }
 
-    class StrMapper implements RowMapper<String> {
+    public static class StrMapper implements RowMapper<String> {
         public String mapRow(ResultSet rs, int rowNum) throws SQLException {
             return rs.getString(1);
         }
     }
 
-    class IntMapper implements RowMapper<Integer> {
+    public static class IntMapper implements RowMapper<Integer> {
         public Integer mapRow(ResultSet rs, int rowNum) throws SQLException {
             return rs.getInt(1);
         }
