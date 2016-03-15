@@ -132,7 +132,7 @@ public class DirTest {
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
         fileDAO.insert(data);
-        countTest(499980);
+        assertEquals(499980,count());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class DirTest {
     @Test
     public void cleanTest() {
         fileDAO.clean();
-        countTest(0);
+        assertEquals(0,count());
     }
 
     public static class StrMapper implements RowMapper<String> {
@@ -158,15 +158,15 @@ public class DirTest {
         }
     }
 
-    public void countTest(int num) {
+    public static int count() {
         PropertyConfigurator.configure("log4j.properties");
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT COUNT(*) FROM 'directory';";
         List<Integer> intLst = jdbcTemplate.query(sql, new IntMapper());
-        assertEquals(num, (int) intLst.get(0));
+         return (int) intLst.get(0);
     }
 
-    public JdbcTemplate getJdbcTemplate() {
+    public static JdbcTemplate getJdbcTemplate() {
         SingleConnectionDataSource ds = new SingleConnectionDataSource();
         ds.setDriverClassName("org.sqlite.JDBC");
         ds.setUrl("jdbc:sqlite:folder.sqlite");
