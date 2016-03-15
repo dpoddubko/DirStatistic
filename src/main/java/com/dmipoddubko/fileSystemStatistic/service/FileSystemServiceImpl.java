@@ -1,24 +1,22 @@
 package com.dmipoddubko.fileSystemStatistic.service;
 
 import com.dmipoddubko.fileSystemStatistic.dao.FileDAO;
-import com.dmipoddubko.fileSystemStatistic.dao.FileDAOImpl;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolder;
-import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class FileSystemServiceImpl implements FileSystemService {
-    private FileDAO fileDAO;
-    private VisitFolder visitFolder;
+    private FileDAO fileDAOImpl;
+    private VisitFolder visitFolderImpl;
 
-    public void FileSystemServiceImpl() {
-        ApplicationContext context = new ClassPathXmlApplicationContext("Beans.xml");
-        this.fileDAO = (FileDAOImpl) context.getBean("fileDAO");
-        this.visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
+    public void setFileDAOImpl(FileDAO fileDAO) {
+        this.fileDAOImpl = fileDAO;
+    }
+
+    public void setVisitFolderImpl(VisitFolder visitFolder) {
+        this.visitFolderImpl = visitFolder;
     }
 
     public void index(String path) {
-        fileDAO.insert(visitFolder.visit(path));
+        fileDAOImpl.insert(visitFolderImpl.visit(path));
     }
 }
 

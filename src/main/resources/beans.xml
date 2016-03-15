@@ -17,7 +17,10 @@
 
     <bean id="visitFolder" class="com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl"/>
 
-    <bean id="fileSystemService" class="com.dmipoddubko.fileSystemStatistic.service.FileSystemServiceImpl"/>
+    <bean id="fileSystemService" class="com.dmipoddubko.fileSystemStatistic.service.FileSystemServiceImpl" scope="prototype">
+        <property name="fileDAOImpl" ref="fileDAO" />
+        <property name="visitFolderImpl" ref="visitFolder" />
+    </bean>
 
 </beans>
 
