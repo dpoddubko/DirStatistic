@@ -17,7 +17,6 @@ public class FileDAOTest {
         JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
         fileDAO.setJdbcTemplate(jdbcTemplate);
         fileDAO.read();
-        FileDAOImpl.FolderDataMapper mapper = new FileDAOImpl.FolderDataMapper();
         verify(jdbcTemplate, times(1)).query(eq("SELECT * FROM directory"), any(FileDAOImpl.FolderDataMapper.class));
     }
 }
