@@ -1,6 +1,5 @@
 package com.dmipoddubko.fileSystemStatistic;
 
-import com.dmipoddubko.fileSystemStatistic.dao.FileDAOImpl;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderDataImpl;
 import com.dmipoddubko.fileSystemStatistic.service.FileSystemServiceImpl;
@@ -9,14 +8,13 @@ import org.apache.log4j.PropertyConfigurator;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class FileSystemServiceTest {
 
@@ -35,15 +33,5 @@ public class FileSystemServiceTest {
         service.setVisitFolderImpl(visitFolder);
         service.index("path");
         assertEquals(num + 2, DirTest.count());
-    }
-
-    @Test
-    public void readTest() {
-        FileDAOImpl fileDAO = (FileDAOImpl) context.getBean("fileDAO");
-        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        fileDAO.setJdbcTemplate(jdbcTemplate);
-        fileDAO.read();
-        verify(jdbcTemplate, times(1)).query(anyString(), (RowMapper<Object>) anyObject());
-        verify(jdbcTemplate).query(eq("SELECT * FROM directory"), (RowMapper<Object>) anyObject());
     }
 }
