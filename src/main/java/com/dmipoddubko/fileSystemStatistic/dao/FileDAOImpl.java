@@ -44,6 +44,7 @@ public class FileDAOImpl implements FileDAO {
                 ps.setString(3, l.getType());
                 ps.setLong(4, l.getSize());
             }
+
             @Override
             public int getBatchSize() {
                 return list.size();
@@ -66,16 +67,6 @@ public class FileDAOImpl implements FileDAO {
     }
 
     public static class FolderDataMapper implements RowMapper<FolderData> {
-        @Override
-        public int hashCode() {
-            return super.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return super.equals(obj);
-        }
-
         public FolderData mapRow(ResultSet rs, int rowNum) throws SQLException {
             return new FolderDataImpl(rs.getString("name"), rs.getString("path"), rs.getString("type"), rs.getLong("size"), rs.getInt("id"));
         }
