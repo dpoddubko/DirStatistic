@@ -6,17 +6,21 @@ import com.dmipoddubko.fileSystemStatistic.folderData.FolderData;
 import com.dmipoddubko.fileSystemStatistic.folderData.FolderDataImpl;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolder;
 import com.dmipoddubko.fileSystemStatistic.visit.VisitFolderImpl;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.junit.BeforeClass;
+import org.junit.AfterClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -27,6 +31,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 
 public class DirTest {
 
@@ -37,16 +42,18 @@ public class DirTest {
     private ApplicationContext context = new ClassPathXmlApplicationContext("Beans.xml");
     private FileDAOImpl fileDAO = (FileDAOImpl) context.getBean("fileDAO");
 
-    @BeforeTest
+
+    @BeforeClass
     public static void setUp() throws InterruptedException, ExecutionException {
         DirDataImpl dirData = new DirDataImpl();
+        DirDataImpl.setNumber(3334);
         String path = dirData.buildPath(rootPath, 30);
         dirData.createDir(path);
         List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
         List<Future<String>> list = new ArrayList<>();
         for (String p : paths) {
             Future<String> submit = executor.submit(() -> {
-                dirData.createFiles(p);
+                dirData.createFiles(p, 6);
                 return "It done!";
             });
             list.add(submit);
@@ -56,15 +63,16 @@ public class DirTest {
         }
     }
 
-    @AfterTest
-    public static void tearDown() throws InterruptedException, ExecutionException {
+    @AfterClass
+    public static void tearDown() throws InterruptedException, ExecutionException, IOException {
         DirDataImpl dirData = new DirDataImpl();
+        DirDataImpl.setNumber(3334);
         List<String> paths = dirData.dividePath(rootPath, 30, THREADS);
         List<Future<String>> list = new ArrayList<>();
         try {
             for (String p : paths) {
                 Future<String> submit = executor.submit(() -> {
-                    dirData.delDir(p);
+                    dirData.delDir(p, 6);
                     return "It done!";
                 });
                 list.add(submit);
@@ -78,10 +86,11 @@ public class DirTest {
                 LOG.info("Awaiting completion of threads.");
             }
         }
+        FileUtils.deleteDirectory(new File(rootPath));
     }
 
     @Test
-    public void fileExistTest() throws IOException {
+    public void a_fileExistTest() throws IOException {
         long countDir = Files.find(
                 Paths.get(rootPath), 35,
                 (path, attributes) -> attributes.isDirectory()
@@ -95,7 +104,7 @@ public class DirTest {
     }
 
     @Test
-    public void folderDataTest() {
+    public void b_folderDataTest() {
         String name = "some_file.txt";
         String path = "C:\\SomeFolder";
         String type = "file";
@@ -110,7 +119,7 @@ public class DirTest {
     }
 
     @Test
-    public void visitFolderImplTest() {
+    public void c_visitFolderImplTest() {
         VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
@@ -118,7 +127,7 @@ public class DirTest {
     }
 
     @Test
-    public void createTest() {
+    public void d_createTest() {
         fileDAO.create();
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='directory'";
@@ -127,23 +136,19 @@ public class DirTest {
     }
 
     @Test
-    public void insertTest() {
+    public void e_insertTest() {
         VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
+        System.out.println(paths.get(4));
         fileDAO.insert(data);
-        assertEquals(499980,count());
+        assertEquals(99996, count());
     }
 
     @Test
-    public void readTest() {
-        assertEquals(499980, fileDAO.read().size());
-    }
-
-    @Test
-    public void cleanTest() {
+    public void f_cleanTest() {
         fileDAO.clean();
-        assertEquals(0,count());
+        assertEquals(0, count());
     }
 
     public static class StrMapper implements RowMapper<String> {
@@ -163,7 +168,7 @@ public class DirTest {
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT COUNT(*) FROM 'directory';";
         List<Integer> intLst = jdbcTemplate.query(sql, new IntMapper());
-         return (int) intLst.get(0);
+        return (int) intLst.get(0);
     }
 
     public static JdbcTemplate getJdbcTemplate() {

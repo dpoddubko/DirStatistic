@@ -1,5 +1,7 @@
 package com.dmipoddubko.fileSystemStatistic.dir;
 
+import com.dmipoddubko.fileSystemStatistic.writeFile.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -12,7 +14,7 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 import static java.nio.file.FileVisitResult.CONTINUE;
 
 public class DirDataImpl implements DirData {
-    private final static int NUMBER = 3334;
+    private static int number;
 
     public void createDir(String path) {
         File file = new File(path);
@@ -38,30 +40,43 @@ public class DirDataImpl implements DirData {
         return paths;
     }
 
-    public void createFiles(String path) {
+    public void createFiles(String path, int depth) {
         CreateFileVisitor fileVisitor = new CreateFileVisitor();
         EnumSet<FileVisitOption> opts = EnumSet.of(FOLLOW_LINKS);
         try {
-            Files.walkFileTree(Paths.get(path), opts, 6, fileVisitor);
+            Files.walkFileTree(Paths.get(path), opts, depth, fileVisitor);
         } catch (IOException e) {
             throw new RuntimeException("Some error with creating files in folder.", e);
         }
     }
 
-    public void delDir(String path) {
+    public void writeFiles(String path, int depth) {
+        WriteFileVisitor fileVisitor = new WriteFileVisitor();
+        EnumSet<FileVisitOption> opts = EnumSet.of(FOLLOW_LINKS);
+        try {
+            Files.walkFileTree(Paths.get(path), opts, depth, fileVisitor);
+        } catch (IOException e) {
+            throw new RuntimeException("Some error with writing files in folder.", e);
+        }
+    }
+
+    public void delDir(String path, int depth) {
         DeleteFileVisitor fileVisitor = new DeleteFileVisitor();
         EnumSet<FileVisitOption> opts = EnumSet.of(FOLLOW_LINKS);
         try {
-            Files.walkFileTree(Paths.get(path), opts, 6, fileVisitor);
+            Files.walkFileTree(Paths.get(path), opts, depth, fileVisitor);
         } catch (IOException e) {
             throw new RuntimeException("Some error with deleting files.", e);
         }
     }
 
     public static File prepareFile(StringBuilder sb, String s) {
-        return new File(new StringBuilder().append(sb).append(s).toString());
+        return new File(prepareStr(sb, s));
     }
 
+    public static String prepareStr(StringBuilder sb, String s) {
+        return new StringBuilder().append(sb).append(s).toString();
+    }
 
     public static class CreateFileVisitor extends SimpleFileVisitor<Path> {
         public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
@@ -69,7 +84,7 @@ public class DirDataImpl implements DirData {
         }
 
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-            for (int i = 1; i < NUMBER; i++) {
+            for (int i = 1; i < number; i++) {
                 StringBuilder sb = new StringBuilder().append(dir).append(File.separator).append("file").append(i).append(".");
                 File txt = prepareFile(sb, "txt");
                 File xml = prepareFile(sb, "xml");
@@ -105,7 +120,7 @@ public class DirDataImpl implements DirData {
         }
 
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-            for (int i = 1; i < NUMBER; i++) {
+            for (int i = 1; i < number; i++) {
                 StringBuilder sb = new StringBuilder().append(dir).append(File.separator).append("file").append(i).append(".");
                 File txt = new File(new StringBuilder().append(sb).append("txt").toString());
                 File xml = new File(new StringBuilder().append(sb).append("xml").toString());
@@ -128,5 +143,44 @@ public class DirDataImpl implements DirData {
         public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return CONTINUE;
         }
+    }
+
+    public static class WriteFileVisitor extends SimpleFileVisitor<Path> {
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attr) {
+            return CONTINUE;
+        }
+
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+            WriteTXTImpl writeTXT = new WriteTXTImpl();
+            WriteXMLImpl writeXML = new WriteXMLImpl();
+            WriteXLSImpl writeXLS = new WriteXLSImpl();
+            WritePDFImpl writePDF = new WritePDFImpl();
+            WriteAVIImpl writeAVI = new WriteAVIImpl();
+            for (int i = 1; i < number; i++) {
+                StringBuilder sb = new StringBuilder().append(dir).append(File.separator).append("file").append(i).append(".");
+                String txt = prepareStr(sb, "txt");
+                writeTXT.doFile(txt);
+                String xml = prepareStr(sb, "xml");
+                writeXML.doFile(xml);
+                String xls = prepareStr(sb, "xls");
+                writeXLS.doFile(xls);
+                String pdf = prepareStr(sb, "pdf");
+                writePDF.doFile(pdf);
+                String avi = prepareStr(sb, "avi");
+                writeAVI.doFile(dir.toString());
+                File oldName = new File(new StringBuilder().append(dir).append("\\KnockYouOut.avi").toString());
+                File newName = new File(avi);
+                oldName.renameTo(newName);
+            }
+            return CONTINUE;
+        }
+
+        public FileVisitResult visitFileFailed(Path file, IOException exc) {
+            return CONTINUE;
+        }
+    }
+
+    public static void setNumber(int number) {
+        DirDataImpl.number = number;
     }
 }
