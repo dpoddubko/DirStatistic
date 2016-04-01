@@ -46,7 +46,7 @@ public class RealFileTest {
     }
 
     @Test
-    public void a_fileExistTest() throws IOException {
+    public void fileExistTest() throws IOException {
         long countDir = Files.find(
                 Paths.get(rootPath), 35,
                 (path, attributes) -> attributes.isDirectory()
@@ -60,14 +60,14 @@ public class RealFileTest {
     }
 
     @Test
-    public void b_visitFolderImplTest() {
+    public void visitFolderImplTest() {
         VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<FolderData> data = visitFolder.visit(rootPath);
         assertEquals(180, data.size());
     }
 
     @Test
-    public void c_createTest() {
+    public void createTest() {
         fileDAO.create();
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='directory'";
@@ -76,7 +76,7 @@ public class RealFileTest {
     }
 
     @Test
-    public void d_insertTest() {
+    public void insertTest() {
         VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<FolderData> data = visitFolder.visit(rootPath);
         fileDAO.insert(data);
@@ -84,12 +84,12 @@ public class RealFileTest {
     }
 
     @Test
-    public void e_readTest() {
+    public void readTest() {
         assertEquals(180, fileDAO.read().size());
     }
 
     @Test
-    public void f_cleanTest() {
+    public void cleanTest() {
         fileDAO.clean();
         assertEquals(0, DirTest.count());
     }

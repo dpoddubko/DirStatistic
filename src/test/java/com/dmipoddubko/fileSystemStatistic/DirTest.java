@@ -90,7 +90,7 @@ public class DirTest {
     }
 
     @Test
-    public void a_fileExistTest() throws IOException {
+    public void fileExistTest() throws IOException {
         long countDir = Files.find(
                 Paths.get(rootPath), 35,
                 (path, attributes) -> attributes.isDirectory()
@@ -104,7 +104,7 @@ public class DirTest {
     }
 
     @Test
-    public void b_folderDataTest() {
+    public void folderDataTest() {
         String name = "some_file.txt";
         String path = "C:\\SomeFolder";
         String type = "file";
@@ -119,7 +119,7 @@ public class DirTest {
     }
 
     @Test
-    public void c_visitFolderImplTest() {
+    public void visitFolderImplTest() {
         VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
@@ -127,7 +127,7 @@ public class DirTest {
     }
 
     @Test
-    public void d_createTest() {
+    public void createTest() {
         fileDAO.create();
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='directory'";
@@ -136,7 +136,7 @@ public class DirTest {
     }
 
     @Test
-    public void e_insertTest() {
+    public void insertTest() {
         VisitFolder visitFolder = (VisitFolderImpl) context.getBean("visitFolder");
         List<String> paths = DirDataImpl.dividePath(rootPath, 30, THREADS);
         List<FolderData> data = visitFolder.visit(paths.get(4));
@@ -146,7 +146,7 @@ public class DirTest {
     }
 
     @Test
-    public void f_cleanTest() {
+    public void cleanTest() {
         fileDAO.clean();
         assertEquals(0, count());
     }
@@ -174,7 +174,7 @@ public class DirTest {
     public static JdbcTemplate getJdbcTemplate() {
         SingleConnectionDataSource ds = new SingleConnectionDataSource();
         ds.setDriverClassName("org.sqlite.JDBC");
-        ds.setUrl("jdbc:sqlite:folder.sqlite");
+        ds.setUrl("jdbc:sqlite:database.sqlite");
         return new JdbcTemplate(ds);
     }
 }
